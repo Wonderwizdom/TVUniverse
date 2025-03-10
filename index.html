@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <script src="https://apis.google.com/js/api.js"></script>
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>My TV Show Tracker</title>
@@ -1111,6 +1113,9 @@
     </style>
 </head>
 <body>
+    <button id="sign-in-btn">Sign in with Google</button>
+<button id="sign-out-btn" style="display: none;">Sign Out</button>
+<button onclick="saveToGoogleDrive()">Save Data</button>
     <!-- <header>
         <div class="container">
             <h1>My TV Show Tracker</h1>
@@ -1301,6 +1306,90 @@
     </div>
     
     <script>
+        const CLIENT_ID = '913878201786-hpdq3nbgpf9ue4m04hm71q9s5imb0m51.apps.googleusercontent.com';
+const API_KEY = 'AIzaSyAIbzRLt37lroJt9ETgPuRdqiu9fnk9oSs';
+const DISCOVERY_DOCS = ["https://www.googleapis.com/discovery/v1/apis/drive/v3/rest"];
+const SCOPES = "https://www.googleapis.com/auth/drive.file";
+
+function saveToGoogleDrive() {
+    const content = JSON.stringify(tvShows);
+    const fileMetadata = {
+        'name': 'tv_tracker_data.json',
+        'mimeType': 'application/json'
+    };
+    
+    const media = {
+        mimeType: 'application/json',
+        body: content
+    };
+
+    gapi.client.drive.files.create({
+        resource: fileMetadata,
+        media: media,
+        fields: 'id'
+    }).then(response => {
+        console.log("File saved with ID:", response.result.id);
+        alert("TV Tracker data saved to Google Drive!");
+    }).catch(error => console.error("Error saving file:", error));
+}
+
+        function loadUserData() {
+    gapi.client.drive.files.list({
+        q: "name='tv_tracker_data.json'",
+        fields: "files(id, name)"
+    }).then(response => {
+        const files = response.result.files;
+        if (files.length > 0) {
+            const fileId = files[0].id;
+            gapi.client.drive.files.get({
+                fileId: fileId,
+                alt: 'media'
+            }).then(response => {
+                tvShows = JSON.parse(response.body);
+                renderShows(tvShows);
+                alert("Loaded TV Tracker data from Google Drive!");
+            }).catch(error => console.error("Error loading file:", error));
+        }
+    });
+}
+        
+function handleClientLoad() {
+    gapi.load('client:auth2', initClient);
+}
+
+function initClient() {
+    gapi.client.init({
+        apiKey: API_KEY,
+        clientId: CLIENT_ID,
+        discoveryDocs: DISCOVERY_DOCS,
+        scope: SCOPES
+    }).then(() => {
+        const auth = gapi.auth2.getAuthInstance();
+        const signInButton = document.getElementById('sign-in-btn');
+        const signOutButton = document.getElementById('sign-out-btn');
+
+        signInButton.addEventListener('click', () => auth.signIn());
+        signOutButton.addEventListener('click', () => auth.signOut());
+
+        auth.isSignedIn.listen(updateSigninStatus);
+        updateSigninStatus(auth.isSignedIn.get());
+    });
+}
+
+function updateSigninStatus(isSignedIn) {
+    if (isSignedIn) {
+        document.getElementById('sign-in-btn').style.display = 'none';
+        document.getElementById('sign-out-btn').style.display = 'block';
+        loadUserData();
+    } else {
+        document.getElementById('sign-in-btn').style.display = 'block';
+        document.getElementById('sign-out-btn').style.display = 'none';
+    }
+}
+
+document.addEventListener('DOMContentLoaded', handleClientLoad);
+
+        
         // Initial TV show data
         const initialShows = [
 
