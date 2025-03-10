@@ -1,0 +1,2559 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My TV Show Tracker</title>
+    <style>
+        :root {
+            --primary: #3498db;
+            --secondary: #2980b9;
+            --accent: #e74c3c;
+            --light: #ecf0f1;
+            --dark: #2c3e50;
+            --success: #2ecc71;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #f5f5f5;
+            color: var(--dark);
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            background-color: var(--primary);
+            color: white;
+            padding: 20px 0;
+            text-align: center;
+            border-radius: 5px 5px 0 0;
+            margin-bottom: 30px;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+        
+        .search-add-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+        
+        .search-container, .add-show-container {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            position: relative;
+            overflow: hidden;
+            border: none;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .search-container:hover, .add-show-container:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+        }
+        
+        .search-container::before, .add-show-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 5px;
+            background: linear-gradient(to right, var(--primary), var(--secondary));
+        }
+        
+        .section-heading {
+            display: flex;
+            align-items: center;
+            margin-bottom: 25px;
+            color: var(--dark);
+            font-size: 1.7rem;
+        }
+        
+        .section-heading .icon-placeholder {
+            width: 36px;
+            height: 36px;
+            background-color: var(--primary);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            margin-right: 12px;
+            font-size: 1.2rem;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+            position: relative;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #555;
+        }
+        
+        .search-add-container input,
+        .search-add-container select {
+            width: 100%;
+            padding: 14px 18px;
+            border-radius: 10px;
+            border: 1px solid #ddd;
+            font-size: 1rem;
+            transition: all 0.3s;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+        }
+        
+        .search-add-container input:focus,
+        .search-add-container select:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.25);
+            outline: none;
+        }
+        
+        .search-add-container button {
+            width: 100%;
+            padding: 14px;
+            font-weight: 600;
+            font-size: 1.1rem;
+            border-radius: 10px;
+            background: linear-gradient(to right, var(--primary), var(--secondary));
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+        }
+        
+        .search-add-container button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        .shows-container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        
+        .filters {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .view-options {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .view-btn {
+            padding: 8px 12px;
+            background-color: #eee;
+            color: var(--dark);
+        }
+        
+        .view-btn.active {
+            background-color: var(--primary);
+            color: white;
+        }
+        
+        .shows-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 20px;
+        }
+        
+        .shows-list {
+            display: none;
+        }
+        
+        .show-card {
+            background: linear-gradient(145deg, #ffffff, #f0f0f0);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+            border-radius: 20px;
+            overflow: hidden;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            border: none;
+            transform-origin: center;
+            max-width: 100%;
+            height: 100%;
+        }
+        
+        .show-card:hover {
+            transform: translateY(-5px) scale(1.01);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15), 0 0 15px rgba(52, 152, 219, 0.2);
+        }
+
+        .show-card-simple {
+            padding: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: auto;
+            position: relative;
+            z-index: 1;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(3px);
+        }
+
+        .show-card-backdrop {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 55px;  /* Match the height of your show-card-simple */
+            background: inherit;
+            z-index: 0;
+        }
+
+        .show-title-simple {
+            font-weight: bold;
+            font-size: 1rem;
+            flex-grow: 1;
+            padding-right: 10px;
+            color: white;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.7);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .status-icon {
+            font-size: 1rem;
+            font-weight: bold;
+            line-height: 1;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            margin-left: 10px;
+            text-align: center;
+            padding: 0;
+            position: relative;
+            flex-shrink: 0; /* Prevent icon from shrinking when title is long */
+        }
+        
+        /* Fine-tune individual icon positioning for optical centering */
+        .status-icon.status-watching::before {
+            content: "►";
+            position: relative;
+            left: 1px; /* Slight adjustment for the play icon */
+        }
+        
+        .status-icon.status-completed::before {
+            content: "✓";
+        }
+        
+        .status-icon.status-plantowatch::before {
+            content: "⏱";
+            font-size: 0.85rem; /* Slightly smaller for this complex icon */
+        }
+        
+        .status-icon.status-dropped::before {
+            content: "✕";
+        }
+        
+        .status-watching {
+            color: white;
+            background-color: #3498db;
+        }
+        
+        .status-completed {
+            color: white;
+            background-color: #2ecc71;
+        }
+        
+        .status-plantowatch {
+            color: white;
+            background-color: #f1c40f;
+        }
+        
+        .status-dropped {
+            color: white;
+            background-color: #e74c3c;
+        }
+
+        /* Remove styles related to expandable content */
+        .show-card-details, .expand-btn, .show-card-header {
+            display: none;
+        }
+        
+        .show-card img {
+            width: 100%;
+            aspect-ratio: 2/3;
+            object-fit: cover;
+            border-top-left-radius: 20px;
+            border-top-right-radius: 20px;
+            filter: contrast(1.05) brightness(0.95);
+            transition: all 0.4s;
+        }
+        
+        .show-card:hover img {
+            filter: contrast(1.1) brightness(1.05);
+            transform: scale(1.03);
+        }
+        
+        .show-info {
+            padding: 12px;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(5px);
+            border-top: 1px solid rgba(240, 240, 240, 0.8);
+            position: relative;
+        }
+        
+        .show-title {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #222;
+            margin-bottom: 10px;
+            text-shadow: 0 1px 1px rgba(0, 0, 0, 0.05);
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            line-height: 1.3;
+            height: 2.6rem;
+            letter-spacing: -0.01em;
+        }
+        
+        .show-genre {
+            color: var(--primary);
+            font-size: 0.85rem;
+            margin-bottom: 12px;
+            font-weight: 600;
+            opacity: 0.9;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .show-rating {
+            display: flex;
+            margin-bottom: 12px;
+            align-items: center;
+        }
+        
+        .star {
+            color: #f1c40f;
+            margin-right: 3px;
+            font-size: 1.1rem;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+        }
+        
+        .show-status {
+            font-size: 0.75rem;
+            padding: 5px 12px;
+            border-radius: 20px;
+            display: inline-block;
+            margin-bottom: 12px;
+            font-weight: 600;
+            letter-spacing: 0.3px;
+            text-transform: uppercase;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        
+        .status-watching {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+        }
+        
+        .status-completed {
+            background: linear-gradient(135deg, #2ecc71, #27ae60);
+            color: white;
+        }
+        
+        .status-plantowatch {
+            background: linear-gradient(135deg, #f1c40f, #f39c12);
+            color: white;
+        }
+        
+        .status-dropped {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+            color: white;
+        }
+        
+        .show-actions {
+            display: flex;
+            justify-content: space-between;
+            margin-top: auto;
+            gap: 8px;
+        }
+        
+        .action-btn {
+            padding: 8px 12px;
+            border-radius: 30px;
+            font-weight: 600;
+            transition: all 0.3s;
+            font-size: 0.8rem;
+            color: #fff;
+            border: none;
+            flex: 1;
+            text-align: center;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        
+        .action-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
+        }
+        
+        .edit-btn {
+            background: linear-gradient(135deg, #f39c12, #e67e22);
+        }
+        
+        .edit-btn:hover {
+            background: linear-gradient(135deg, #e67e22, #d35400);
+        }
+        
+        .delete-btn {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+        }
+        
+        .delete-btn:hover {
+            background: linear-gradient(135deg, #c0392b, #a93226);
+        }
+        
+        .stats-container {
+            margin-top: 30px;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        
+        .stats-flex {
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .stat-card {
+            flex: 1;
+            min-width: 150px;
+            padding: 15px;
+            text-align: center;
+            background-color: var(--light);
+            border-radius: 8px;
+            transition: transform 0.3s;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--primary);
+            margin-bottom: 5px;
+        }
+        
+        .stat-label {
+            color: var(--dark);
+        }
+
+        .advanced-stats {
+            margin-top: 30px;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .genre-chart, .status-chart {
+            height: 200px;
+            margin-top: 15px;
+            margin-bottom: 30px;
+            display: flex;
+            align-items: flex-end;
+            gap: 5px;
+        }
+
+        .chart-bar {
+            flex: 1;
+            background: var(--primary);
+            border-radius: 5px 5px 0 0;
+            min-width: 40px;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            align-items: center;
+            color: white;
+            padding-top: 5px;
+            position: relative;
+            transition: height 0.5s;
+        }
+
+        .chart-bar-label {
+            position: absolute;
+            bottom: -25px;
+            text-align: center;
+            font-size: 0.8rem;
+            color: var(--dark);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 100%;
+            transform: rotate(-45deg);
+            transform-origin: left top;
+            left: 10px;
+        }
+
+        .chart-bar-value {
+            padding: 5px;
+            font-weight: bold;
+        }
+
+        .chart-title {
+            margin-bottom: 10px;
+            color: var(--primary);
+            font-size: 1.2rem;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+        
+        .modal-content {
+            background-color: white;
+            margin: 5vh auto;
+            padding: 20px;
+            border-radius: 8px;
+            max-width: 600px;
+            position: relative;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        
+        .close {
+            position: absolute;
+            right: 20px;
+            top: 15px;
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+        
+        .shows-list-view {
+            border-collapse: collapse;
+            width: 100%;
+        }
+        
+        .shows-list-view th, .shows-list-view td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        .shows-list-view th {
+            background-color: var(--primary);
+            color: white;
+        }
+        
+        .shows-list-view tr:hover {
+            background-color: #f5f5f5;
+        }
+        
+        .list-actions {
+            display: flex;
+            gap: 5px;
+        }
+        
+        @media (max-width: 768px) {
+            .search-add-container {
+                flex-direction: column;
+            }
+            
+            .shows-grid {
+                grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            }
+            
+            .shows-list-view {
+                font-size: 0.9rem;
+            }
+            
+            .shows-list-view th, .shows-list-view td {
+                padding: 8px 10px;
+            }
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 50px 20px;
+            color: #777;
+        }
+        
+        .empty-state i {
+            font-size: 4rem;
+            margin-bottom: 15px;
+            color: #ddd;
+        }
+        
+        .create-btn {
+            background-color: var(--success);
+            padding: 12px 20px;
+            margin-top: 15px;
+            font-size: 1.1rem;
+        }
+        
+        /* Genre filter pills */
+        .genre-filters {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+        
+        .genre-pill {
+            padding: 5px 12px;
+            background-color: #eee;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .genre-pill:hover {
+            background-color: #ddd;
+        }
+        
+        .genre-pill.active {
+            background-color: var(--primary);
+            color: white;
+        }
+
+        .details-content {
+    max-width: 800px;
+    width: 90%;
+}
+
+.details-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.detail-action-btn {
+    flex: 1;
+    padding: 10px;
+    border-radius: 30px;
+    font-weight: 600;
+    transition: all 0.3s;
+    font-size: 0.9rem;
+    color: #fff;
+    border: none;
+    text-align: center;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.show-details-container {
+    display: flex;
+    gap: 20px;
+}
+
+.show-poster {
+    flex: 0 0 200px;
+}
+
+.show-poster img {
+    width: 100%;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.show-details-info {
+    flex: 1;
+}
+
+.show-meta {
+    display: flex;
+    gap: 10px;
+    margin: 10px 0;
+}
+
+.show-card {
+    cursor: pointer;
+}
+
+.show-description {
+    margin-top: 15px;
+}
+
+.show-description h3 {
+    margin-bottom: 8px;
+    color: var(--primary);
+}
+
+.show-description p {
+    line-height: 1.6;
+}
+
+.show-extra-info {
+    margin-top: 20px;
+}
+
+.show-extra-info div {
+    margin-bottom: 8px;
+}
+
+@media (max-width: 768px) {
+    .show-details-container {
+        flex-direction: column;
+    }
+}
+
+        .advanced-stats {
+            margin-top: 30px;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
+        }
+
+        .genre-chart, .status-chart {
+            height: 220px;
+            margin: 25px 0 40px 0;
+            display: flex;
+            align-items: flex-end;
+            gap: 10px;
+            position: relative;
+            padding-bottom: 30px;
+        }
+
+        .chart-bar {
+            flex: 1;
+            min-width: 20px;
+            max-width: 80px;
+            border-radius: 8px 8px 0 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            align-items: center;
+            color: white;
+            position: relative;
+            transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            overflow: visible;
+        }
+        
+        .chart-bar:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        .chart-bar-label {
+            position: absolute;
+            bottom: -30px;
+            text-align: center;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--dark);
+            width: 100%;
+            padding: 0 5px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .chart-bar-value {
+            padding: 8px 0;
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+
+        .chart-title {
+            margin-bottom: 15px;
+            color: var(--primary);
+            font-size: 1.3rem;
+            font-weight: bold;
+            border-bottom: 2px solid var(--light);
+            padding-bottom: 10px;
+            display: flex;
+            align-items: center;
+        }
+
+        .chart-title i {
+            margin-right: 8px;
+            font-size: 1.4rem;
+        }
+
+        .stat-card-lg {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin: 15px 0;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s;
+            border-left: 5px solid var(--primary);
+        }
+
+        .stat-card-lg:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.12);
+        }
+
+        .stat-card-lg .title {
+            font-size: 1rem;
+            color: #666;
+            margin-bottom: 8px;
+        }
+
+        .stat-card-lg .value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--dark);
+        }
+
+        .stat-card-lg .subtitle {
+            font-size: 0.9rem;
+            color: #888;
+            margin-top: 8px;
+            font-style: italic;
+        }
+
+        .fun-stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin: 25px 0;
+        }
+
+        .stat-highlight {
+            color: var(--primary);
+        }
+
+        .chart-container {
+            margin-bottom: 40px;
+            padding-bottom: 10px;
+        }
+
+        .funfact {
+            display: inline-flex;
+            align-items: center;
+            background-color: #fcf8e3;
+            border-left: 4px solid #f0ad4e;
+            padding: 10px 15px;
+            margin: 15px 0;
+            border-radius: 3px;
+        }
+
+        .funfact i {
+            margin-right: 10px;
+            font-size: 1.2rem;
+            color: #f0ad4e;
+        }
+        
+        /* Colorful gradient backgrounds for status charts */
+        .chart-bar.status-watching {
+            background: linear-gradient(to top, #3498db, #5dade2);
+        }
+        
+        .chart-bar.status-completed {
+            background: linear-gradient(to top, #2ecc71, #58d68d);
+        }
+        
+        .chart-bar.status-plantowatch {
+            background: linear-gradient(to top, #f1c40f, #f4d03f);
+        }
+        
+        .chart-bar.status-dropped {
+            background: linear-gradient(to top, #e74c3c, #ec7063);
+        }
+
+        /* Genre chart bars with gradient */
+        .genre-chart .chart-bar {
+            background: linear-gradient(to top, #3498db, #5dade2);
+        }
+        
+        .genre-chart .chart-bar:nth-child(2n) {
+            background: linear-gradient(to top, #9b59b6, #bb8fce);
+        }
+        
+        .genre-chart .chart-bar:nth-child(3n) {
+            background: linear-gradient(to top, #2ecc71, #58d68d);
+        }
+        
+        .genre-chart .chart-bar:nth-child(4n) {
+            background: linear-gradient(to top, #e67e22, #eb984e);
+        }
+        
+        .genre-chart .chart-bar:nth-child(5n) {
+            background: linear-gradient(to top, #e74c3c, #ec7063);
+        }
+        
+        /* Font awesome fallback */
+        .icon-placeholder {
+            display: inline-block;
+            width: 1.2em;
+            text-align: center;
+            margin-right: 8px;
+        }
+
+        /* Poster collage hero section */
+        .hero-collage {
+            position: relative;
+            height: 360px;
+            margin-bottom: 30px;
+            overflow: hidden;
+            border-radius: 10px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            grid-auto-rows: 180px;
+            gap: 0;
+        }
+        
+        .hero-collage::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(
+                to bottom,
+                rgba(0, 0, 0, 0.1) 0%,
+                rgba(0, 0, 0, 0.4) 60%,
+                rgba(0, 0, 0, 0.8) 100%
+            );
+            z-index: 2;
+        }
+        
+        .hero-collage-poster {
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s;
+        }
+        
+        .hero-collage-poster img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.5s;
+            filter: grayscale(0.2);
+        }
+        
+        .hero-collage-poster:hover img {
+            transform: scale(1.1);
+            filter: grayscale(0);
+        }
+        
+        .hero-content {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 30px;
+            color: white;
+            z-index: 3;
+            text-align: center;
+        }
+        
+        .hero-title {
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.8);
+            color: #d7e4dc;
+        }
+        
+        .hero-subtitle {
+            font-size: 1.2rem;
+            max-width: 700px;
+            margin: 0 auto;
+            font-weight: 300;
+            text-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
+        }
+        
+        .hero-stats {
+            display: flex;
+            justify-content: center;
+            margin-top: 15px;
+            gap: 20px;
+            font-size: 1.1rem;
+        }
+        
+        .hero-stat {
+            display: flex;
+            align-items: center;
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
+        }
+        
+        .hero-stat-count {
+            font-weight: bold;
+            margin-right: 5px;
+            color: var(--primary);
+        }
+
+        /* Auto-suggest styles */
+        .autocomplete-container {
+            position: relative;
+        }
+        
+        .suggestions-list {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            z-index: 10;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+            max-height: 250px;
+            overflow-y: auto;
+            display: none;
+        }
+        
+        .suggestion-item {
+            padding: 12px 15px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .suggestion-item:last-child {
+            border-bottom: none;
+        }
+        
+        .suggestion-item:hover {
+            background-color: #f8f9fa;
+        }
+        
+        .suggestion-item img {
+            width: 40px;
+            height: 60px;
+            object-fit: cover;
+            border-radius: 4px;
+        }
+        
+        .suggestion-item-details {
+            flex: 1;
+        }
+        
+        .suggestion-item-title {
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .suggestion-item-info {
+            font-size: 0.8rem;
+            color: #777;
+        }
+        
+        .search-status {
+            font-size: 0.9rem;
+            margin-top: 5px;
+            color: #777;
+            font-style: italic;
+            height: 20px;
+        }
+        
+        .spinner {
+            display: inline-block;
+            width: 18px;
+            height: 18px;
+            border: 2px solid rgba(52, 152, 219, 0.3);
+            border-radius: 50%;
+            border-top-color: var(--primary);
+            animation: spin 0.8s linear infinite;
+            margin-right: 5px;
+            vertical-align: middle;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <!-- <header>
+        <div class="container">
+            <h1>My TV Show Tracker</h1>
+            <p>Keep track of all your favorite shows in one place</p>
+        </div>
+    </header> -->
+    
+    <!-- New Hero Collage Section - will be populated dynamically -->
+    <div class="container" id="hero-container">
+        <!-- Hero collage will be inserted here when there are enough shows -->
+    </div>
+    
+    <div class="container">
+        <div class="search-add-container">
+            <div class="search-container">
+                <h2 class="section-heading">
+                    <span class="icon-placeholder">🔍</span>
+                    Find Shows
+                </h2>
+                <div class="form-group">
+                    <label for="search-input">Search by title or genre</label>
+                    <input type="text" id="search-input" placeholder="Enter show title or genre...">
+                </div>
+                <div class="form-group">
+                    <label for="genre-filters">Filter by genre</label>
+                    <div class="genre-filters" id="genre-filters">
+                        <!-- Genre pills will be added here -->
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="status-filter">Filter by status</label>
+                    <select id="status-filter">
+                        <option value="all">All Statuses</option>
+                        <option value="watching">Currently Watching</option>
+                        <option value="completed">Completed</option>
+                        <option value="plantowatch">Plan to Watch</option>
+                        <option value="dropped">Dropped</option>
+                    </select>
+                </div>
+                <button id="search-btn">Find My Shows</button>
+            </div>
+            
+            <div class="add-show-container">
+                <h2 class="section-heading">
+                    <span class="icon-placeholder">+</span>
+                    Add New Show
+                </h2>
+                <div class="form-group">
+                    <label for="show-title">Show Title</label>
+                    <div class="autocomplete-container">
+                        <input type="text" id="show-title" placeholder="Enter show title...">
+                        <div id="search-status" class="search-status"></div>
+                        <div id="suggestions-list" class="suggestions-list"></div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="show-genre">Genre</label>
+                    <input type="text" id="show-genre" placeholder="Genres will be filled automatically..." readonly>
+                </div>
+                <div class="form-group">
+                    <label for="show-status">Status</label>
+                    <select id="show-status">
+                        <option value="watching">Currently Watching</option>
+                        <option value="completed">Completed</option>
+                        <option value="plantowatch">Plan to Watch</option>
+                        <option value="dropped">Dropped</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="show-rating">Rating (1-5)</label>
+                    <input type="number" id="show-rating" min="1" max="5" placeholder="How would you rate this show?">
+                </div>
+                <button id="add-show-btn">Add to My Collection</button>
+            </div>
+        </div>
+        
+        <div class="shows-container">
+            <div class="filters">
+                <h2>My Shows</h2>
+                <div class="view-options">
+                    <button class="view-btn active" id="grid-view-btn">Grid</button>
+                    <button class="view-btn" id="list-view-btn">List</button>
+                </div>
+            </div>
+            
+            <div class="shows-grid" id="shows-grid">
+                <!-- Show cards will be displayed here -->
+            </div>
+            
+            <div class="shows-list" id="shows-list">
+                <table class="shows-list-view">
+                    <thead>
+                        <tr>
+                            <th>Title</th>
+                            <th>Genre</th>
+                            <th>Status</th>
+                            <th>Rating</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="shows-list-body">
+                        <!-- Shows list will be displayed here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <div class="stats-container">
+            <h2>My Watching Stats</h2>
+            <div class="stats-flex">
+                <div class="stat-card">
+                    <div class="stat-value" id="total-shows">0</div>
+                    <div class="stat-label">Total Shows</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="watching-shows">0</div>
+                    <div class="stat-label">Watching</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="completed-shows">0</div>
+                    <div class="stat-label">Completed</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="avg-rating">0</div>
+                    <div class="stat-label">Avg Rating</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Edit Show Modal -->
+    <div class="modal" id="edit-modal">
+        <div class="modal-content">
+            <span class="close" id="close-modal">&times;</span>
+            <h2>Edit Show</h2>
+            <input type="hidden" id="edit-show-id">
+            <input type="text" id="edit-show-title" placeholder="Show Title" required>
+            <input type="text" id="edit-show-genre" placeholder="Genre (e.g., Comedy, Drama)">
+            <select id="edit-show-status">
+                <option value="watching">Currently Watching</option>
+                <option value="completed">Completed</option>
+                <option value="plantowatch">Plan to Watch</option>
+                <option value="dropped">Dropped</option>
+            </select>
+            <input type="number" id="edit-show-rating" min="1" max="5" placeholder="Rating (1-5)">
+            <div style="margin-bottom: 15px;">
+                <label for="edit-show-image">Custom Image URL (optional):</label>
+                <input type="text" id="edit-show-image" placeholder="https://example.com/image.jpg">
+                <small style="display: block; margin-top: 5px; color: #777;">Leave empty to use automatic images</small>
+            </div>
+            <button id="save-edit-btn">Save Changes</button>
+        </div>
+    </div>
+    
+    <!-- Show Details Modal -->
+    <div class="modal" id="details-modal">
+        <div class="modal-content details-content">
+            <span class="close" id="close-details-modal">&times;</span>
+            <h2 id="details-show-title">Show Title</h2>
+            
+            <div class="show-details-container">
+                <div class="show-poster">
+                    <img id="show-poster" src="https://via.placeholder.com/200x300?text=Loading..." alt="Show poster">
+                </div>
+                
+                <div class="show-details-info">
+                    <div class="show-meta">
+                        <div id="details-show-status" class="show-status">Status</div>
+                        <div id="details-show-genre">Genre</div>
+                    </div>
+                    <div id="details-show-rating" class="show-rating"></div>
+                    
+                    <div class="show-description">
+                        <h3>Description</h3>
+                        <p id="details-show-description">Loading...</p>
+                    </div>
+                    
+                    <div id="details-extra-info" class="show-extra-info">
+                        <!-- Extra info will be added here dynamically -->
+                    </div>
+                </div>
+            </div>
+            <div id="details-actions" class="details-actions">
+                <button class="detail-action-btn edit-btn" id="modal-edit-btn" style="background: linear-gradient(135deg, #f39c12, #e67e22);">Edit</button>
+                <button class="detail-action-btn delete-btn" id="modal-delete-btn" style="background: linear-gradient(135deg, #e74c3c, #c0392b);">Delete</button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Initial TV show data
+        const initialShows = [
+
+        ];
+        
+        // Check if there's data in localStorage
+        let tvShows = JSON.parse(localStorage.getItem('tvShows')) || initialShows;
+        
+        // DOM elements
+        const showsGrid = document.getElementById('shows-grid');
+        const showsList = document.getElementById('shows-list');
+        const showsListBody = document.getElementById('shows-list-body');
+        const gridViewBtn = document.getElementById('grid-view-btn');
+        const listViewBtn = document.getElementById('list-view-btn');
+        const searchInput = document.getElementById('search-input');
+        const statusFilter = document.getElementById('status-filter');
+        const searchBtn = document.getElementById('search-btn');
+        const genreFilters = document.getElementById('genre-filters');
+        
+        // Stats elements
+        const totalShowsEl = document.getElementById('total-shows');
+        const watchingShowsEl = document.getElementById('watching-shows');
+        const completedShowsEl = document.getElementById('completed-shows');
+        const avgRatingEl = document.getElementById('avg-rating');
+        
+        // Add show form elements
+        const showTitleInput = document.getElementById('show-title');
+        const showGenreInput = document.getElementById('show-genre');
+        const showStatusSelect = document.getElementById('show-status');
+        const showRatingInput = document.getElementById('show-rating');
+        const addShowBtn = document.getElementById('add-show-btn');
+        
+        // Edit modal elements
+        const editModal = document.getElementById('edit-modal');
+        const closeModal = document.getElementById('close-modal');
+        const editShowId = document.getElementById('edit-show-id');
+        const editShowTitle = document.getElementById('edit-show-title');
+        const editShowGenre = document.getElementById('edit-show-genre');
+        const editShowStatus = document.getElementById('edit-show-status');
+        const editShowRating = document.getElementById('edit-show-rating');
+        const saveEditBtn = document.getElementById('save-edit-btn');
+        const editShowImage = document.getElementById('edit-show-image');
+        
+        // Initialize the app
+        function init() {
+            // Initialize modal element references
+            window.detailsModal = document.getElementById('details-modal');
+            window.closeDetailsModal = document.getElementById('close-details-modal');
+            window.showPoster = document.getElementById('show-poster');
+            window.detailsShowTitle = document.getElementById('details-show-title');
+            window.detailsShowStatus = document.getElementById('details-show-status');
+            window.detailsShowRating = document.getElementById('details-show-rating');
+            window.detailsShowGenre = document.getElementById('details-show-genre');
+            window.detailsShowDescription = document.getElementById('details-show-description');
+            window.detailsExtraInfo = document.getElementById('details-extra-info');
+            
+            renderShows(tvShows);
+            updateStats();
+            populateGenreFilters();
+            setupEventListeners();
+            
+            // Create hero collage if there are enough shows
+            createHeroCollage();
+            setupAutoComplete(); // Setup auto-complete functionality
+        }
+        
+        // Render shows in grid view
+function renderShowsGrid(shows) {
+    showsGrid.innerHTML = '';
+    
+    if (shows.length === 0) {
+        showsGrid.innerHTML = `
+            <div class="empty-state">
+                <div>No shows found</div>
+                <div>Try adding a new show or adjusting your filters</div>
+            </div>
+        `;
+        return;
+    }
+    
+    shows.forEach(show => {
+        const showCard = document.createElement('div');
+        showCard.className = 'show-card';
+        showCard.setAttribute('data-id', show.id);
+        
+        // Add simple content to show card - just image, title and status with empty icon
+        // The icons will be added by CSS pseudo-elements for better centering
+        showCard.innerHTML = `
+            <div class="show-card-simple">
+                <div class="show-title-simple">${show.title}</div>
+                <div class="status-icon status-${show.status}"></div>
+            </div>
+        `;
+        
+        showsGrid.appendChild(showCard);
+        
+        // Try to fetch and add image asynchronously
+        fetchAndAddImage(show.title, showCard, show.id);
+    });
+}
+
+// Helper function to get display name for status
+function getStatusDisplayName(status) {
+    switch (status) {
+        case 'watching': return 'Watching';
+        case 'completed': return 'Completed';
+        case 'plantowatch': return 'Plan to Watch';
+        case 'dropped': return 'Dropped';
+        default: return status;
+    }
+}
+
+// Render shows in list view
+function renderShowsList(shows) {
+    showsListBody.innerHTML = '';
+    
+    if (shows.length === 0) {
+        showsListBody.innerHTML = `
+            <tr>
+                <td colspan="5">
+                    <div class="empty-state">
+                        <div>No shows found</div>
+                        <div>Try adding a new show or adjusting your filters</div>
+                    </div>
+                </td>
+            </tr>
+        `;
+        return;
+    }
+    
+    shows.forEach(show => {
+        let stars = '';
+        for (let i = 1; i <= 5; i++) {
+            if (i <= show.rating) {
+                stars += '<span class="star">★</span>';
+            } else {
+                stars += '<span class="star" style="color: #ddd">★</span>';
+            }
+        }
+        
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${show.title}</td>
+            <td>${show.genre}</td>
+            <td><div class="show-status status-${show.status}">${getStatusDisplayName(show.status)}</div></td>
+            <td>${stars}</td>
+            <td class="list-actions">
+                <button class="action-btn edit-btn" data-id="${show.id}">Edit</button>
+                <button class="action-btn delete-btn" data-id="${show.id}">Delete</button>
+            </td>
+        `;
+        
+        showsListBody.appendChild(row);
+    });
+}
+
+// Render shows based on current view
+function renderShows(shows) {
+    renderShowsGrid(shows);
+    renderShowsList(shows);
+}
+
+// Update statistics section with more fun stats
+function updateStats() {
+    const totalShows = tvShows.length;
+    const watchingShows = tvShows.filter(show => show.status === 'watching').length;
+    const completedShows = tvShows.filter(show => show.status === 'completed').length;
+    const planToWatchShows = tvShows.filter(show => show.status === 'plantowatch').length;
+    const droppedShows = tvShows.filter(show => show.status === 'dropped').length;
+    
+    // Calculate average rating
+    const showsWithRatings = tvShows.filter(show => show.rating > 0);
+    const avgRating = showsWithRatings.length > 0
+        ? (showsWithRatings.reduce((sum, show) => sum + show.rating, 0) / showsWithRatings.length).toFixed(1)
+        : 0;
+    
+    // Basic stats
+    totalShowsEl.textContent = totalShows;
+    watchingShowsEl.textContent = watchingShows;
+    completedShowsEl.textContent = completedShows;
+    avgRatingEl.textContent = avgRating;
+    
+    // Find genres distribution
+    const genreCounts = {};
+    tvShows.forEach(show => {
+        const genres = show.genre.split(', ');
+        genres.forEach(genre => {
+            if (genreCounts[genre]) {
+                genreCounts[genre]++;
+            } else {
+                genreCounts[genre] = 1;
+            }
+        });
+    });
+    
+    // Sort genres by count (descending)
+    const sortedGenres = Object.entries(genreCounts)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 8); // Take top 8 genres
+    
+    // Find most common genre
+    let mostCommonGenre = "None";
+    let maxCount = 0;
+    Object.entries(genreCounts).forEach(([genre, count]) => {
+        if (count > maxCount) {
+            mostCommonGenre = genre;
+            maxCount = count;
+        }
+    });
+
+    // Count unique genres
+    const uniqueGenreCount = Object.keys(genreCounts).length;
+    
+    // Calculate genre diversity score (0-100)
+    // Higher score = more even distribution across genres
+    let genreDiversity = 0;
+    if (uniqueGenreCount > 0) {
+        const totalGenreInstances = Object.values(genreCounts).reduce((sum, count) => sum + count, 0);
+        const evenDistribution = totalGenreInstances / uniqueGenreCount;
+        const squaredDifferences = Object.values(genreCounts).reduce(
+            (sum, count) => sum + Math.pow(count - evenDistribution, 2), 0);
+        const normalizedVariance = squaredDifferences / (totalGenreInstances * uniqueGenreCount);
+        genreDiversity = Math.round((1 - normalizedVariance) * 100);
+    }
+    
+    // Calculate binge time (assume 45 minutes per episode, 10 episodes per season)
+    const estimatedEpisodes = tvShows.length * 10;
+    const bingeDays = Math.round(estimatedEpisodes * 45 / 60 / 24);
+    const bingeWeeks = Math.round(bingeDays / 7);
+    
+    // Create a "happiness score" based on show ratings
+    const completionRate = totalShows > 0 ? Math.round((completedShows / totalShows) * 100) : 0;
+    const avgRatingNormalized = parseFloat(avgRating) * 20; // Convert to percentage
+    const droppedRatio = totalShows > 0 ? Math.round((droppedShows / totalShows) * 100) : 0;
+    const happinessScore = Math.round((avgRatingNormalized * 0.6) + (completionRate * 0.3) - (droppedRatio * 0.2));
+
+    // Create advanced stats section if it doesn't exist
+    let advancedStats = document.querySelector('.advanced-stats');
+    if (!advancedStats) {
+        const statsContainer = document.querySelector('.stats-container');
+        
+        // Add more stat cards to the basic stats section
+        const moreStatsRow = document.createElement('div');
+        moreStatsRow.className = 'stats-flex';
+        moreStatsRow.innerHTML = `
+            <div class="stat-card">
+                <div class="stat-value" id="plan-to-watch">${planToWatchShows}</div>
+                <div class="stat-label">Plan to Watch</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="dropped-shows">${droppedShows}</div>
+                <div class="stat-label">Dropped</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="most-common-genre">${mostCommonGenre}</div>
+                <div class="stat-label">Top Genre</div>
+            </div>
+        `;
+        statsContainer.appendChild(moreStatsRow);
+        
+        // Now add the dedicated advanced stats section
+        advancedStats = document.createElement('div');
+        advancedStats.className = 'advanced-stats';
+        
+        // Add fun stats first
+        advancedStats.innerHTML = `
+            <h2>Fun Stats & Insights</h2>
+            
+            <div class="funfact">
+                <span class="icon-placeholder">💡</span>
+                Did you know? If you watched all your shows back-to-back, it would take approximately 
+                <strong>${bingeDays} days</strong> (about ${bingeWeeks} weeks) of non-stop viewing!
+            </div>
+            
+            <div class="fun-stats-grid">
+                <div class="stat-card-lg">
+                    <div class="title">Genre Diversity Score</div>
+                    <div class="value">${genreDiversity}<span style="font-size: 1.2rem">/100</span></div>
+                    <div class="subtitle">How varied your taste in shows is</div>
+                </div>
+                
+                <div class="stat-card-lg">
+                    <div class="title">Completion Rate</div>
+                    <div class="value">${completionRate}%</div>
+                    <div class="subtitle">Shows you've finished watching</div>
+                </div>
+                
+                <div class="stat-card-lg">
+                    <div class="title">TV Happiness Score</div>
+                    <div class="value">${happinessScore}<span style="font-size: 1.2rem">/100</span></div>
+                    <div class="subtitle">Based on your ratings and completion rate</div>
+                </div>
+                
+                <div class="stat-card-lg">
+                    <div class="title">Genre Explorer Level</div>
+                    <div class="value">${uniqueGenreCount}</div>
+                    <div class="subtitle">Unique genres you've watched</div>
+                </div>
+            </div>
+
+            <div class="chart-container">
+                <h3 class="chart-title">
+                    <span class="icon-placeholder">📊</span> Watching Status Distribution
+                </h3>
+                <div class="status-chart" id="status-chart"></div>
+            </div>
+            
+            <div class="chart-container">
+                <h3 class="chart-title">
+                    <span class="icon-placeholder">🎭</span> Top Genres
+                </h3>
+                <div class="genre-chart" id="genre-chart"></div>
+            </div>
+        `;
+        
+        statsContainer.appendChild(advancedStats);
+    }
+    
+    // Update genre chart
+    const genreChart = document.getElementById('genre-chart');
+    genreChart.innerHTML = '';
+    
+    const maxGenreCount = sortedGenres.length > 0 ? sortedGenres[0][1] : 0;
+    
+    sortedGenres.forEach(([genre, count]) => {
+        const heightPercentage = count / maxGenreCount * 100;
+        const bar = document.createElement('div');
+        bar.className = 'chart-bar';
+        bar.style.height = `${Math.max(20, heightPercentage)}%`;
+        bar.innerHTML = `
+            <div class="chart-bar-value">${count}</div>
+            <div class="chart-bar-label">${genre}</div>
+        `;
+        genreChart.appendChild(bar);
+    });
+    
+    // Update status chart
+    const statusChart = document.getElementById('status-chart');
+    statusChart.innerHTML = '';
+    
+    const statusData = [
+        ['Watching', watchingShows, 'status-watching'],
+        ['Completed', completedShows, 'status-completed'],
+        ['Plan to Watch', planToWatchShows, 'status-plantowatch'],
+        ['Dropped', droppedShows, 'status-dropped']
+    ];
+    
+    const maxStatusCount = Math.max(watchingShows, completedShows, planToWatchShows, droppedShows, 1);
+    
+    statusData.forEach(([status, count, className]) => {
+        const heightPercentage = count / maxStatusCount * 100;
+        const bar = document.createElement('div');
+        bar.className = `chart-bar ${className}`;
+        bar.style.height = `${Math.max(20, heightPercentage)}%`;
+        bar.innerHTML = `
+            <div class="chart-bar-value">${count}</div>
+            <div class="chart-bar-label">${status}</div>
+        `;
+        statusChart.appendChild(bar);
+    });
+
+    // Update values in existing fun-stats-grid
+    const existingAdvancedStats = document.querySelector('.advanced-stats');
+    if (existingAdvancedStats) {
+        const statsCards = existingAdvancedStats.querySelectorAll('.stat-card-lg');
+        
+        // Update genre diversity
+        if (statsCards[0]) {
+            statsCards[0].querySelector('.value').innerHTML = 
+                `${genreDiversity}<span style="font-size: 1.2rem">/100</span>`;
+        }
+        
+        // Update completion rate
+        if (statsCards[1]) {
+            statsCards[1].querySelector('.value').textContent = `${completionRate}%`;
+        }
+        
+        // Update happiness score
+        if (statsCards[2]) {
+            statsCards[2].querySelector('.value').innerHTML = 
+                `${happinessScore}<span style="font-size: 1.2rem">/100</span>`;
+        }
+        
+        // Update genre explorer level
+        if (statsCards[3]) {
+            statsCards[3].querySelector('.value').textContent = uniqueGenreCount;
+        }
+        
+        // Update fun fact
+        const funfact = existingAdvancedStats.querySelector('.funfact');
+        if (funfact) {
+            funfact.innerHTML = `
+                <span class="icon-placeholder">💡</span>
+                Did you know? If you watched all your shows back-to-back, it would take approximately 
+                <strong>${bingeDays} days</strong> (about ${bingeWeeks} weeks) of non-stop viewing!
+            `;
+        }
+    }
+}
+
+// Populate genre filter pills
+function populateGenreFilters() {
+    // Get unique genres
+    const genres = new Set();
+    tvShows.forEach(show => {
+        const showGenres = show.genre.split(', ');
+        showGenres.forEach(genre => genres.add(genre));
+    });
+    
+    // Sort genres alphabetically
+    const sortedGenres = [...genres].sort();
+    
+    genreFilters.innerHTML = '';
+    
+    // Add "All" pill first
+    const allGenrePill = document.createElement('div');
+    allGenrePill.className = 'genre-pill active';
+    allGenrePill.setAttribute('data-genre', 'all');
+    allGenrePill.textContent = 'All';
+    genreFilters.appendChild(allGenrePill);
+    
+    // Add individual genre pills
+    sortedGenres.forEach(genre => {
+        const genrePill = document.createElement('div');
+        genrePill.className = 'genre-pill';
+        genrePill.setAttribute('data-genre', genre);
+        genrePill.textContent = genre;
+        genreFilters.appendChild(genrePill);
+    });
+}
+
+// Set up event listeners
+function setupEventListeners() {
+    // View toggle
+    gridViewBtn.addEventListener('click', () => {
+        gridViewBtn.classList.add('active');
+        listViewBtn.classList.remove('active');
+        showsGrid.style.display = 'grid';
+        showsList.style.display = 'none';
+    });
+    
+    listViewBtn.addEventListener('click', () => {
+        listViewBtn.classList.add('active');
+        gridViewBtn.classList.remove('active');
+        showsList.style.display = 'block';
+        showsGrid.style.display = 'none';
+    });
+    
+    // Search functionality
+    searchBtn.addEventListener('click', filterShows);
+    searchInput.addEventListener('keyup', (e) => {
+        if (e.key === 'Enter') filterShows();
+    });
+    statusFilter.addEventListener('change', filterShows);
+    
+    // Genre filter pills
+    genreFilters.addEventListener('click', (e) => {
+        if (e.target.classList.contains('genre-pill')) {
+            document.querySelectorAll('.genre-pill').forEach(pill => {
+                pill.classList.remove('active');
+            });
+            e.target.classList.add('active');
+            filterShows();
+        }
+    });
+    
+    // Add new show
+    addShowBtn.addEventListener('click', addNewShow);
+    
+    // Edit and delete actions from list view
+    showsListBody.addEventListener('click', handleShowAction);
+    
+    // Modal functionality
+    closeModal.addEventListener('click', () => {
+        editModal.style.display = 'none';
+    });
+    
+    window.addEventListener('click', (e) => {
+        if (e.target === editModal) {
+            editModal.style.display = 'none';
+        }
+    });
+    
+    // Save edit changes
+    saveEditBtn.addEventListener('click', saveEditChanges);
+
+    // Details modal functionality
+    closeDetailsModal.addEventListener('click', () => {
+        detailsModal.style.display = 'none';
+    });
+    
+    window.addEventListener('click', (e) => {
+        if (e.target === detailsModal) {
+            detailsModal.style.display = 'none';
+        }
+    });
+    
+    // Make shows clickable for details
+    showsGrid.addEventListener('click', (e) => {
+        // Find the closest show card
+        const showCard = e.target.closest('.show-card');
+        if (showCard) {
+            const showId = parseInt(showCard.getAttribute('data-id'));
+            openShowDetails(showId);
+        }
+    });
+    
+    showsListBody.addEventListener('click', (e) => {
+        // Don't trigger if clicking on buttons in list view
+        if (e.target.classList.contains('action-btn') || 
+            e.target.closest('.action-btn')) {
+            return;
+        }
+        
+        const row = e.target.closest('tr');
+        if (row) {
+            const button = row.querySelector('.action-btn');
+            if (button) {
+                const showId = parseInt(button.getAttribute('data-id'));
+                openShowDetails(showId);
+            }
+        }
+    });
+    
+    // Remove expand/collapse handler
+}
+
+// Filter shows based on search, status and genre
+function filterShows() {
+    const searchTerm = searchInput.value.toLowerCase();
+    const statusValue = statusFilter.value;
+    const activeGenrePill = document.querySelector('.genre-pill.active');
+    const genreFilter = activeGenrePill.getAttribute('data-genre');
+    
+    const filteredShows = tvShows.filter(show => {
+        const titleMatch = show.title.toLowerCase().includes(searchTerm);
+        const statusMatch = statusValue === 'all' || show.status === statusValue;
+        const genreMatch = genreFilter === 'all' || 
+            show.genre.toLowerCase().split(', ').includes(genreFilter.toLowerCase());
+        
+        return titleMatch && statusMatch && genreMatch;
+    });
+    
+    renderShows(filteredShows);
+}
+
+// Add a new show
+function addNewShow() {
+    const title = document.getElementById('show-title').value.trim();
+    let genre = document.getElementById('show-genre').value.trim();
+    const status = document.getElementById('show-status').value;
+    const rating = parseInt(document.getElementById('show-rating').value) || 0;
+    
+    if (!title) {
+        alert('Please enter a show title');
+        return;
+    }
+    
+    // Generate new ID
+    const maxId = tvShows.reduce((max, show) => Math.max(max, show.id), 0);
+    const newId = maxId + 1;
+    
+    const newShow = {
+        id: newId,
+        title,
+        genre: genre || 'Unknown',
+        status,
+        rating: Math.min(Math.max(rating, 1), 5), // Ensure rating is between 1-5
+        imageUrl: selectedShowData?.imageUrl || '' // Use image from selected show if available
+    };
+    
+    tvShows.push(newShow);
+    localStorage.setItem('tvShows', JSON.stringify(tvShows));
+    
+    // Clear form
+    document.getElementById('show-title').value = '';
+    document.getElementById('show-genre').value = '';
+    document.getElementById('show-status').value = 'watching';
+    document.getElementById('show-rating').value = '';
+    selectedShowData = null;
+    document.getElementById('search-status').innerHTML = '';
+    
+    renderShows(tvShows);
+    updateStats();
+    populateGenreFilters();
+    createHeroCollage(); // Refresh hero collage with new show
+}
+
+// Handle edit/delete actions
+function handleShowAction(e) {
+    if (e.target.classList.contains('edit-btn')) {
+        const showId = parseInt(e.target.getAttribute('data-id'));
+        openEditModal(showId);
+    } else if (e.target.classList.contains('delete-btn')) {
+        const showId = parseInt(e.target.getAttribute('data-id'));
+        deleteShow(showId);
+    }
+}
+
+// Open edit modal
+function openEditModal(showId) {
+    const show = tvShows.find(show => show.id === showId);
+    if (!show) return;
+    
+    editShowId.value = show.id;
+    editShowTitle.value = show.title;
+    editShowGenre.value = show.genre;
+    editShowStatus.value = show.status;
+    editShowRating.value = show.rating;
+    editShowImage.value = show.imageUrl || ''; // Add this line
+    
+    editModal.style.display = 'block';
+}
+
+// Save edit changes
+function saveEditChanges() {
+    const showId = parseInt(editShowId.value);
+    const show = tvShows.find(show => show.id === showId);
+    if (!show) return;
+    
+    show.title = editShowTitle.value.trim();
+    show.genre = editShowGenre.value.trim() || 'Unknown';
+    show.status = editShowStatus.value;
+    show.rating = parseInt(editShowRating.value) || 1;
+    show.imageUrl = editShowImage.value.trim(); // Add this line
+    
+    localStorage.setItem('tvShows', JSON.stringify(tvShows));
+    
+    renderShows(tvShows);
+    updateStats();
+    populateGenreFilters();
+    
+    editModal.style.display = 'none';
+}
+
+// Delete show
+function deleteShow(showId) {
+    if (confirm('Are you sure you want to delete this show?')) {
+        tvShows = tvShows.filter(show => show.id !== showId);
+        localStorage.setItem('tvShows', JSON.stringify(tvShows));
+        
+        renderShows(tvShows);
+        updateStats();
+        populateGenreFilters();
+    }
+}
+
+// Handle show clicks to open details (updated version)
+function handleShowClick(e) {
+    // Don't trigger if clicking on buttons
+    if (e.target.classList.contains('action-btn') || 
+        e.target.closest('.action-btn')) {
+        return;
+    }
+    
+    // Find the closest show card or row
+    const showElement = e.target.closest('.show-card') || e.target.closest('tr');
+    if (!showElement) return;
+    
+    // Get show ID from the card itself (preferred) or from a button
+    const showId = parseInt(showElement.getAttribute('data-id') || 
+                          showElement.querySelector('[data-id]').getAttribute('data-id'));
+    
+    console.log("Show clicked:", showId); // Add this for debugging
+    openShowDetails(showId);
+}
+
+// Fetch and display show details
+async function openShowDetails(showId) {
+    const show = tvShows.find(show => show.id === showId);
+    if (!show) return;
+    
+    // Fill in basic details we already have
+    detailsShowTitle.textContent = show.title;
+    detailsShowGenre.textContent = show.genre;
+    detailsShowStatus.className = `show-status status-${show.status}`;
+    detailsShowStatus.textContent = getStatusDisplayName(show.status);
+    
+    // Create stars for rating
+    let stars = '';
+    for (let i = 1; i <= 5; i++) {
+        if (i <= show.rating) {
+            stars += '<span class="star">★</span>';
+        } else {
+            stars += '<span class="star" style="color: #ddd">★</span>';
+        }
+    }
+    detailsShowRating.innerHTML = stars;
+    
+    // Check for custom image first
+    if (show.imageUrl) {
+        showPoster.src = show.imageUrl;
+        showPoster.onerror = function() {
+            this.onerror = null;
+            this.src = 'https://via.placeholder.com/200x300?text=Image+Error';
+        };
+    } else {
+        // Set default image while loading
+        showPoster.src = 'https://via.placeholder.com/200x300?text=Loading...';
+    }
+    
+    detailsShowDescription.textContent = 'Loading description...';
+    detailsExtraInfo.innerHTML = '';
+    
+    // Add edit and delete buttons to the modal
+    if (!document.getElementById('details-actions')) {
+        const actionsDiv = document.createElement('div');
+        actionsDiv.id = 'details-actions';
+        actionsDiv.className = 'details-actions';
+        actionsDiv.innerHTML = `
+            <button class="detail-action-btn edit-btn" id="modal-edit-btn" style="background: linear-gradient(135deg, #f39c12, #e67e22);">Edit</button>
+            <button class="detail-action-btn delete-btn" id="modal-delete-btn" style="background: linear-gradient(135deg, #e74c3c, #c0392b);">Delete</button>
+        `;
+        
+        const detailsContainer = document.querySelector('.show-details-container');
+        detailsContainer.parentNode.appendChild(actionsDiv);
+        
+        // Add event listeners for these buttons
+        document.getElementById('modal-edit-btn').addEventListener('click', () => {
+            detailsModal.style.display = 'none';
+            openEditModal(showId);
+        });
+        
+        document.getElementById('modal-delete-btn').addEventListener('click', () => {
+            detailsModal.style.display = 'none';
+            deleteShow(showId);
+        });
+    } else {
+        // Update existing buttons' data-id
+        const modalEditBtn = document.getElementById('modal-edit-btn');
+        const modalDeleteBtn = document.getElementById('modal-delete-btn');
+        
+        modalEditBtn.onclick = () => {
+            detailsModal.style.display = 'none';
+            openEditModal(showId);
+        };
+        
+        modalDeleteBtn.onclick = () => {
+            detailsModal.style.display = 'none';
+            deleteShow(showId);
+        }
+    }
+    
+    // Show the modal immediately with what we have
+    detailsModal.style.display = 'block';
+    
+    try {
+        // Fetch TMDB data regardless of whether we have a custom image
+        // We need this for the description and streaming info
+        const tmdbData = await fetchShowDetails(show.title);
+        
+        if (tmdbData) {
+            // Update image if we don't have a custom one
+            if (!show.imageUrl && tmdbData.poster_path) {
+                showPoster.src = TMDB_IMG_URL + tmdbData.poster_path;
+            } else if (!show.imageUrl) {
+                showPoster.src = 'https://via.placeholder.com/200x300?text=No+Image';
+            }
+            
+            // Update description
+            detailsShowDescription.textContent = tmdbData.overview || 'No description available';
+            
+            // Add basic info
+            let extraInfo = '';
+            if (tmdbData.first_air_date) {
+                const year = new Date(tmdbData.first_air_date).getFullYear();
+                extraInfo += `<div><strong>First aired:</strong> ${year}</div>`;
+            }
+            if (tmdbData.number_of_seasons) {
+                extraInfo += `<div><strong>Seasons:</strong> ${tmdbData.number_of_seasons}</div>`;
+            }
+            if (tmdbData.vote_average) {
+                extraInfo += `<div><strong>TMDB rating:</strong> ${tmdbData.vote_average.toFixed(1)}/10</div>`;
+            }
+            
+            // Fetch and add streaming service information
+            extraInfo += `<div class="streaming-services"><strong>Stream on:</strong> <span id="streaming-services-list">Loading...</span></div>`;
+            detailsExtraInfo.innerHTML = extraInfo;
+            
+            // Now fetch the streaming providers
+            const streamingServicesList = document.getElementById('streaming-services-list');
+            const watchProviders = await fetchWatchProviders(tmdbData.id);
+            
+            if (watchProviders && watchProviders.length > 0) {
+                streamingServicesList.innerHTML = '';
+                
+                // Create a container for the streaming logos
+                const logosContainer = document.createElement('div');
+                logosContainer.className = 'streaming-logos';
+                logosContainer.style.display = 'flex';
+                logosContainer.style.flexWrap = 'wrap';
+                logosContainer.style.gap = '8px';
+                logosContainer.style.marginTop = '8px';
+                
+                watchProviders.forEach(provider => {
+                    const logo = document.createElement('div');
+                    logo.className = 'streaming-logo';
+                    logo.style.position = 'relative';
+                    logo.style.width = '40px';
+                    logo.style.height = '40px';
+                    logo.style.borderRadius = '8px';
+                    logo.style.overflow = 'hidden';
+                    logo.style.boxShadow = '0 2px 5px rgba(0, 0, 0, 0.2)';
+                    
+                    const img = document.createElement('img');
+                    img.src = `https://image.tmdb.org/t/p/original${provider.logo_path}`;
+                    img.alt = provider.provider_name;
+                    img.title = provider.provider_name;
+                    img.style.width = '100%';
+                    img.style.height = '100%';
+                    img.style.objectFit = 'cover';
+                    
+                    logo.appendChild(img);
+                    logosContainer.appendChild(logo);
+                });
+                
+                streamingServicesList.appendChild(logosContainer);
+            } else {
+                streamingServicesList.textContent = 'Not available on major streaming services';
+                streamingServicesList.style.color = '#888';
+                streamingServicesList.style.fontStyle = 'italic';
+            }
+        } else {
+            if (!show.imageUrl) {
+                showPoster.src = 'https://via.placeholder.com/200x300?text=No+Image';
+            }
+            detailsShowDescription.textContent = 'No description available';
+            detailsExtraInfo.innerHTML = '<div class="streaming-services"><strong>Stream on:</strong> <span style="color:#888;font-style:italic;">Information not available</span></div>';
+        }
+    } catch (error) {
+        console.error('Error fetching show details:', error);
+        if (!show.imageUrl) {
+            showPoster.src = 'https://via.placeholder.com/200x300?text=No+Image';
+        }
+        detailsShowDescription.textContent = 'Failed to load description';
+        detailsExtraInfo.innerHTML = '<div class="streaming-services"><strong>Stream on:</strong> <span style="color:#888;font-style:italic;">Information not available</span></div>';
+    }
+}
+
+// Fetch show details from TMDB API
+async function fetchShowDetails(title) {
+    try {
+        // Search for the TV show
+        const searchUrl = `${TMDB_BASE_URL}/search/tv?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(title)}`;
+        const searchResponse = await fetch(searchUrl);
+        const searchData = await searchResponse.json();
+        
+        if (searchData.results && searchData.results.length > 0) {
+            // Get the first result's ID
+            const tvId = searchData.results[0].id;
+            
+            // Fetch detailed information about the TV show
+            const detailsUrl = `${TMDB_BASE_URL}/tv/${tvId}?api_key=${TMDB_API_KEY}`;
+            const detailsResponse = await fetch(detailsUrl);
+            return await detailsResponse.json();
+        }
+        return null;
+    } catch (error) {
+        console.error('Error fetching from TMDB:', error);
+        return null;
+    }
+}
+
+// Fetch and add show image to card
+async function fetchAndAddImage(title, showCard, showId) {
+    // Find the show by ID
+    const show = tvShows.find(s => s.id === showId);
+    
+    // If show has a custom image URL, use it
+    if (show && show.imageUrl) {
+        const img = document.createElement('img');
+        img.src = show.imageUrl;
+        img.alt = title;
+        img.onerror = function() {
+            this.onerror = null;
+            this.src = 'https://via.placeholder.com/200x300?text=Image+Error';
+            showCard.style.backgroundImage = 'linear-gradient(145deg, #3498db, #2c3e50)';
+        };
+        img.onload = function() {
+            // Apply a darker gradient at the bottom for better text visibility
+            showCard.style.background = `
+                linear-gradient(to bottom, 
+                    rgba(0,0,0,0) 70%, 
+                    rgba(0,0,0,0.7) 100%)
+            `;
+        };
+        
+        // Insert at the beginning of the card
+        showCard.insertBefore(img, showCard.firstChild);
+        return;
+    }
+    
+    // Otherwise use TMDB API
+    try {
+        const tmdbData = await fetchShowDetails(title);
+        
+        if (tmdbData && tmdbData.poster_path) {
+            const imgUrl = TMDB_IMG_URL + tmdbData.poster_path;
+            
+            // Create image element
+            const img = document.createElement('img');
+            img.src = imgUrl;
+            img.alt = title;
+            img.onload = function() {
+                // Apply a darker gradient at the bottom for better text visibility
+                showCard.style.background = `
+                    linear-gradient(to bottom, 
+                        rgba(0,0,0,0) 70%, 
+                        rgba(0,0,0,0.7) 100%)
+                `;
+            };
+            img.onerror = function() {
+                this.onerror = null;
+                this.src = 'https://via.placeholder.com/200x300?text=No+Image';
+                showCard.style.backgroundImage = 'linear-gradient(145deg, #3498db, #2c3e50)';
+            };
+            
+            // Insert at the beginning of the card
+            showCard.insertBefore(img, showCard.firstChild);
+        } else {
+            // No image found, add placeholder
+            const img = document.createElement('img');
+            img.src = 'https://via.placeholder.com/200x300?text=No+Image';
+            img.alt = title;
+            showCard.insertBefore(img, showCard.firstChild);
+            showCard.style.backgroundImage = 'linear-gradient(145deg, #3498db, #2c3e50)';
+        }
+    } catch (error) {
+        console.error('Error adding image:', error);
+        // Add placeholder on error
+        const img = document.createElement('img');
+        img.src = 'https://via.placeholder.com/200x300?text=No+Image';
+        img.alt = title;
+        showCard.insertBefore(img, showCard.firstChild);
+        showCard.style.backgroundImage = 'linear-gradient(145deg, #3498db, #2c3e50)';
+    }
+}
+
+// TMDB API configuration
+const TMDB_API_KEY = '04dbe99e719e4f8cd55226b325512f1d'; // Replace with your actual API key
+const TMDB_BASE_URL = 'https://api.themoviedb.org/3';
+const TMDB_IMG_URL = 'https://image.tmdb.org/t/p/w500';
+
+// Details modal elements
+const detailsModal = document.getElementById('details-modal');
+const closeDetailsModal = document.getElementById('close-details-modal');
+const showPoster = document.getElementById('show-poster');
+const detailsShowTitle = document.getElementById('details-show-title');
+const detailsShowStatus = document.getElementById('details-show-status');
+const detailsShowRating = document.getElementById('details-show-rating');
+const detailsShowGenre = document.getElementById('details-show-genre');
+const detailsShowDescription = document.getElementById('details-show-description');
+const detailsExtraInfo = document.getElementById('details-extra-info');
+
+// Create a collage of show posters for the hero section
+async function createHeroCollage() {
+    const heroContainer = document.getElementById('hero-container');
+    
+    // Clear any existing hero collage first to prevent duplication
+    heroContainer.innerHTML = '';
+    
+    // Only create the collage if we have at least 10 shows
+    if (tvShows.length < 10) {
+        return;
+    }
+    
+    // Create hero section structure
+    const heroSection = document.createElement('div');
+    heroSection.className = 'hero-collage';
+    
+    // Create content overlay
+    const heroContent = document.createElement('div');
+    heroContent.className = 'hero-content';
+    
+    // Add title and stats
+    const watchingCount = tvShows.filter(show => show.status === 'watching').length;
+    const completedCount = tvShows.filter(show => show.status === 'completed').length;
+    const topRated = [...tvShows].sort((a, b) => b.rating - a.rating)[0];
+    
+    heroContent.innerHTML = `
+        <h2 class="hero-title">Your TV Universe</h2>
+        <p class="hero-subtitle">Journey through ${tvShows.length} worlds of entertainment</p>
+        <div class="hero-stats">
+            <div class="hero-stat">
+                <span class="hero-stat-count">${watchingCount}</span> Currently Watching
+            </div>
+            <div class="hero-stat">
+                <span class="hero-stat-count">${completedCount}</span> Completed
+            </div>
+            <div class="hero-stat">
+                <span class="hero-stat-count">${topRated?.title || "None"}</span> Top Rated
+            </div>
+        </div>
+    `;
+    
+    heroSection.appendChild(heroContent);
+    
+    // Function to add a poster to the collage
+    const addPosterToCollage = async (show, index) => {
+        const posterDiv = document.createElement('div');
+        posterDiv.className = 'hero-collage-poster';
+        
+        let posterUrl = '';
+        
+        // Use custom image if available
+        if (show.imageUrl) {
+            posterUrl = show.imageUrl;
+        } else {
+            // Otherwise try to fetch from TMDB
+            try {
+                const tmdbData = await fetchShowDetails(show.title);
+                if (tmdbData && tmdbData.poster_path) {
+                    posterUrl = TMDB_IMG_URL + tmdbData.poster_path;
+                }
+            } catch (error) {
+                console.error('Error fetching poster:', error);
+            }
+        }
+        
+        // If no image found, use placeholder
+        if (!posterUrl) {
+            posterUrl = `https://via.placeholder.com/200x300?text=${encodeURIComponent(show.title)}`;
+        }
+        
+        // Create image element
+        const img = document.createElement('img');
+        img.src = posterUrl;
+        img.alt = show.title;
+        img.loading = 'lazy'; // For better performance
+        
+        // Add fade-in effect as images load
+        img.style.opacity = '0';
+        img.onload = () => {
+            img.style.transition = 'opacity 0.5s';
+            img.style.opacity = '1';
+        };
+        
+        posterDiv.appendChild(img);
+        
+        // Add a slight delay for each poster to create a cascade effect
+        setTimeout(() => {
+            heroSection.appendChild(posterDiv);
+        }, index * 50);
+    };
+    
+    // Select a diverse mix of shows for the collage
+    // Get shows with high ratings, different statuses, and genres
+    let collageShows = [];
+    
+    // First, get some highly rated shows
+    collageShows = collageShows.concat(
+        [...tvShows].sort((a, b) => b.rating - a.rating).slice(0, 5)
+    );
+    
+    // Get shows from different statuses
+    ['watching', 'completed', 'plantowatch'].forEach(status => {
+        const statusShows = tvShows.filter(show => show.status === status);
+        collageShows = collageShows.concat(
+            statusShows.sort(() => 0.5 - Math.random()).slice(0, 3)
+        );
+    });
+    
+    // Get shows from different genres
+    const genres = new Set();
+    tvShows.forEach(show => {
+        show.genre.split(', ').forEach(g => genres.add(g));
+    });
+    
+    [...genres].slice(0, 5).forEach(genre => {
+        const genreShows = tvShows.filter(show => show.genre.includes(genre));
+        collageShows = collageShows.concat(
+            genreShows.sort(() => 0.5 - Math.random()).slice(0, 2)
+        );
+    });
+    
+    // Remove duplicates
+    const uniqueShows = [];
+    const seenIds = new Set();
+    collageShows.forEach(show => {
+        if (!seenIds.has(show.id)) {
+            seenIds.add(show.id);
+            uniqueShows.push(show);
+        }
+    });
+    
+    // Add more random shows if needed to fill the grid
+    while (uniqueShows.length < 24) {
+        const randomShow = tvShows[Math.floor(Math.random() * tvShows.length)];
+        if (!seenIds.has(randomShow.id)) {
+            seenIds.add(randomShow.id);
+            uniqueShows.push(randomShow);
+        }
+    }
+    
+    // Shuffle the final array to randomize placement
+    uniqueShows
+        .sort(() => 0.5 - Math.random())
+        .slice(0, 24) // Limit to 24 posters for performance
+        .forEach((show, index) => addPosterToCollage(show, index));
+    
+    // Insert the hero section at the beginning of the container
+    heroContainer.appendChild(heroSection);
+    
+    // Make the hero section clickable to show a random show's details
+    heroSection.addEventListener('click', (e) => {
+        // Don't trigger if clicking directly on a poster
+        if (!e.target.closest('.hero-collage-poster')) {
+            const randomShowId = tvShows[Math.floor(Math.random() * tvShows.length)].id;
+            openShowDetails(randomShowId);
+        }
+    });
+}
+
+// Add debounce function to prevent too many API calls
+function debounce(func, wait) {
+    let timeout;
+    return function(...args) {
+        clearTimeout(timeout);
+        timeout = setTimeout(() => func.apply(this, args), wait);
+    };
+}
+
+// Setup event listeners for auto-complete
+function setupAutoComplete() {
+    const showTitleInput = document.getElementById('show-title');
+    const suggestionsList = document.getElementById('suggestions-list');
+    const searchStatus = document.getElementById('search-status');
+    const genreInput = document.getElementById('show-genre');
+    
+    // Debounce function to prevent excessive API calls
+    const debouncedSearch = debounce(async (searchTerm) => {
+        if (searchTerm.length < 2) {
+            suggestionsList.style.display = 'none';
+            searchStatus.innerHTML = '';
+            return;
+        }
+        
+        searchStatus.innerHTML = '<span class="spinner"></span> Searching...';
+        
+        try {
+            const searchUrl = `${TMDB_BASE_URL}/search/tv?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(searchTerm)}`;
+            const response = await fetch(searchUrl);
+            const data = await response.json();
+            
+            if (data.results && data.results.length > 0) {
+                displaySuggestions(data.results.slice(0, 6)); // Show top 6 results
+                searchStatus.innerHTML = `Found ${data.results.length} results`;
+            } else {
+                suggestionsList.style.display = 'none';
+                searchStatus.innerHTML = 'No shows found';
+            }
+        } catch (error) {
+            console.error('Error searching shows:', error);
+            searchStatus.innerHTML = 'Error searching shows';
+        }
+    }, 500);
+    
+    // Function to display search suggestions
+    function displaySuggestions(shows) {
+        suggestionsList.innerHTML = '';
+        
+        shows.forEach(show => {
+            const item = document.createElement('div');
+            item.className = 'suggestion-item';
+            
+            const imageUrl = show.poster_path 
+                ? `${TMDB_IMG_URL}${show.poster_path}`
+                : 'https://via.placeholder.com/40x60?text=No+Image';
+            
+            const year = show.first_air_date 
+                ? new Date(show.first_air_date).getFullYear()
+                : 'N/A';
+            
+            item.innerHTML = `
+                <img src="${imageUrl}" alt="${show.name}" onerror="this.src='https://via.placeholder.com/40x60?text=No+Image'">
+                <div class="suggestion-item-details">
+                    <div class="suggestion-item-title">${show.name}</div>
+                    <div class="suggestion-item-info">${year} • Rating: ${show.vote_average.toFixed(1)}/10</div>
+                </div>
+            `;
+            
+            item.addEventListener('click', () => {
+                selectShow(show);
+            });
+            
+            suggestionsList.appendChild(item);
+        });
+        
+        suggestionsList.style.display = 'block';
+    }
+    
+    // Function to select a show from suggestions
+    async function selectShow(show) {
+        showTitleInput.value = show.name;
+        suggestionsList.style.display = 'none';
+        searchStatus.innerHTML = '<span class="spinner"></span> Fetching details...';
+        
+        try {
+            // Fetch detailed information
+            const detailsUrl = `${TMDB_BASE_URL}/tv/${show.id}?api_key=${TMDB_API_KEY}`;
+            const response = await fetch(detailsUrl);
+            const data = await response.json();
+            
+            // Extract genres and join them into a string
+            const genres = data.genres.map(g => g.name).join(', ');
+            genreInput.value = genres;
+            
+            // Store the selected show data for later use
+            selectedShowData = {
+                title: data.name,
+                genre: genres,
+                imageUrl: data.poster_path ? `${TMDB_IMG_URL}${data.poster_path}` : '',
+                overview: data.overview || ''
+            };
+            
+            searchStatus.innerHTML = 'Show details loaded';
+        } catch (error) {
+            console.error('Error fetching show details:', error);
+            searchStatus.innerHTML = 'Error loading details';
+        }
+    }
+    
+    // Add event listeners
+    showTitleInput.addEventListener('input', (e) => {
+        const searchTerm = e.target.value.trim();
+        debouncedSearch(searchTerm);
+    });
+    
+    // Close suggestions when clicking outside
+    document.addEventListener('click', (e) => {
+        if (!showTitleInput.contains(e.target) && !suggestionsList.contains(e.target)) {
+            suggestionsList.style.display = 'none';
+        }
+    });
+}
+
+// Add a new function to fetch streaming service providers
+async function fetchWatchProviders(tvId) {
+    try {
+        const url = `${TMDB_BASE_URL}/tv/${tvId}/watch_providers?api_key=${TMDB_API_KEY}`;
+        const response = await fetch(url);
+        const data = await response.json();
+        
+        // Focus on US providers by default (could be expanded for other regions)
+        return data.results?.US?.flatrate || [];
+    } catch (error) {
+        console.error('Error fetching streaming services:', error);
+        return [];
+    }
+}
+
+// Initialize the app
+init();
+    </script>
+</body>
+</html>
